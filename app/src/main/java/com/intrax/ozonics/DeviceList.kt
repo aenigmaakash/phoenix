@@ -13,21 +13,24 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.View
+import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_device_list.*
+import java.util.ArrayList
 
 
 class DeviceList : AppCompatActivity() {
 
     private val mPairedDevices = arrayOfNulls<BluetoothDevice>(50)
     lateinit var myBluetooth: BluetoothAdapter
-    private var deviceMAC:String? = null
-    private val deviceName = "phoenix"
+    private val deviceName = "Phoenix"
     private var firstTime: Boolean = true
+    var mBTDevices: ArrayList<BluetoothDevice> = ArrayList()
+
 
 
 
@@ -35,32 +38,13 @@ class DeviceList : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device_list)
         firstTime = intent.getBooleanExtra("first_time", true)
-        Toast.makeText(this, firstTime.toString(), Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this, firstTime.toString(), Toast.LENGTH_SHORT).show()
         myBluetooth = BluetoothAdapter.getDefaultAdapter()
         checkBTPermissions()
-        if(myBluetooth.isEnabled)
-            searchDevices()
-
-        textView.visibility = View.INVISIBLE
-
-        warningText.visibility = View.INVISIBLE
-
         if(myBluetooth.isEnabled){
             bluetoothOn.isChecked = true
+            searchDevices()
         }
-
-        textView.setOnClickListener(View.OnClickListener  {
-            if(deviceMAC!=null) {
-                myBluetooth.cancelDiscovery()
-                val intent = Intent(applicationContext, MainActivity::class.java)
-                intent.putExtra("DeviceAddress", deviceMAC)
-                startActivity(intent)
-                finish()
-            }
-            else{
-                Toast.makeText(this, "Device not found! Please make sure device is nearby", Toast.LENGTH_LONG).show()
-            }
-        })
 
         bluetoothOn.setOnCheckedChangeListener { _, isChecked ->
             if(isChecked){
@@ -83,11 +67,15 @@ class DeviceList : AppCompatActivity() {
             }
         }
 
-        warningText.setOnClickListener(View.OnClickListener {
-            val intent = Intent()
-            intent.action = android.provider.Settings.ACTION_BLUETOOTH_SETTINGS
+        deviceList.setOnItemClickListener { parent, view, position, id ->
+            val macId = view.findViewById<TextView>(R.id.deviceAddress).text.toString()
+            //Toast.makeText(this, macId, Toast.LENGTH_SHORT).show()
+            myBluetooth.cancelDiscovery()
+            val intent = Intent(applicationContext, MainActivity::class.java)
+            intent.putExtra("DeviceAddress", macId)
             startActivity(intent)
-        })
+            finish()
+        }
 
 
     }
@@ -97,14 +85,9 @@ class DeviceList : AppCompatActivity() {
         val pairedDevices: Set<BluetoothDevice> = myBluetooth.bondedDevices
 
         if(firstTime){
+            if(myBluetooth.isDiscovering)
+                myBluetooth.cancelDiscovery()
             if(checkGpsStatus()){
-                if(myBluetooth.isDiscovering){
-                    myBluetooth.cancelDiscovery()
-                    checkBTPermissions()
-                    myBluetooth.startDiscovery()
-                    val intent = IntentFilter(BluetoothDevice.ACTION_FOUND)
-                    registerReceiver(bluetoothBroadcastReceiver, intent)
-                }
                 if(!myBluetooth.isDiscovering){
                     checkBTPermissions()
                     myBluetooth.startDiscovery()
@@ -124,29 +107,31 @@ class DeviceList : AppCompatActivity() {
                 var pairedDeviceFound = false
                 for  (device in pairedDevices) {
                     mPairedDevices.set(i, device)
-                    if (device.name.contains(deviceName)){                      //this part searches for 'deviceName' devices that is already paired
-                        Toast.makeText(this, "Connecting to " + device.name.toString(), Toast.LENGTH_SHORT).show()
-                        deviceMAC = device.address.toString()
-                        if(deviceMAC!=null) {
-                            myBluetooth.cancelDiscovery()
-                            val intent = Intent(applicationContext, MainActivity::class.java)
-                            intent.putExtra("DeviceAddress", deviceMAC)
-                            startActivity(intent)
-                            finish()
+                    if (device.name.contains(deviceName)){                  //this part searches for 'deviceName' devices that is already paired
+                        if(!mBTDevices.contains(device)){
+                            mBTDevices.add(device)
+                            val deviceListAdapter = DeviceListAdapter(this, R.layout.device_list_layout, mBTDevices)
+                            deviceList.adapter = deviceListAdapter
                         }
-                        else{
-                            Toast.makeText(this, "Device not found! Please make sure device is nearby", Toast.LENGTH_LONG).show()
-                        }
-                        pairedDeviceFound = true
                     }
                     i++
                 }
                 if(!pairedDeviceFound){                            //if device not paired discovers device to be manually paired
                     if(myBluetooth.isDiscovering)
                         myBluetooth.cancelDiscovery()
-                    Toast.makeText(this, "Please pair your device for the first time with passcode '1234'", Toast.LENGTH_LONG).show()
-                    warningText.text = ("Click here to pair a new Ozonics device\nPlease use the passcode 1234")
-                    warningText.visibility = View.VISIBLE
+                    if(checkGpsStatus()){
+                        if(!myBluetooth.isDiscovering){
+                            checkBTPermissions()
+                            myBluetooth.startDiscovery()
+                            val intent = IntentFilter(BluetoothDevice.ACTION_FOUND)
+                            registerReceiver(bluetoothBroadcastReceiver, intent)
+                        }
+                    }
+                    else{
+                        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                        startActivity(intent)
+                        finish()
+                    }
                 }
             }
             else {
@@ -172,19 +157,18 @@ class DeviceList : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(bluetoothBroadcastReceiver)
     }
 
     override fun onResume() {
         super.onResume()
-        warningText.visibility = View.INVISIBLE
         if(myBluetooth.isEnabled)
             searchDevices()
-//        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-//        registerReceiver(receiver, filter)
     }
 
     override fun onPause() {
         super.onPause()
+        //unregisterReceiver(bluetoothBroadcastReceiver)
     }
 
     private fun checkBTPermissions() {
@@ -227,8 +211,14 @@ class DeviceList : AppCompatActivity() {
             if (action == BluetoothDevice.ACTION_FOUND) {
                 val device =
                     intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                if (device.name!=null){
-                    Toast.makeText(applicationContext, device.name + "\n" + device.address, Toast.LENGTH_SHORT).show()
+                Log.d("DeviceName:", device.name + device.address)
+                if (device.name!=null && device.name.contains(deviceName)){
+                    if(!mBTDevices.contains(device)){
+                        mBTDevices.add(device)
+                        val deviceListAdapter = DeviceListAdapter(context, R.layout.device_list_layout, mBTDevices)
+                        deviceList.adapter = deviceListAdapter
+
+                    }
                 }
             }
         }

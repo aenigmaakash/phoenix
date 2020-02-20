@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".DeviceList">
+    tools:context=".DeviceList"
+    android:background="@drawable/background"
+    >
 
     <ToggleButton
         android:id="@+id/bluetoothOn"
@@ -18,26 +20,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="160dp"
-        android:layout_marginTop="340dp"
-        android:text="Button"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/warningText"
-        android:layout_width="409dp"
-        android:layout_height="35dp"
-        android:layout_marginTop="32dp"
-        android:text="TextView"
-        android:textAlignment="center"
-        android:textSize="30sp"
+    <ListView
+        android:id="@+id/deviceList"
+        android:layout_width="413dp"
+        android:layout_height="583dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/bluetoothOn" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".test"
+    android:background="@drawable/background">
+
+    <FrameLayout
+        android:layout_width="409dp"
+        android:layout_height="110dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginEnd="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <FrameLayout
+            android:id="@+id/batteryLayout"
+            android:layout_width="98dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="17dp"
+            android:layout_marginTop="17dp">
+
+            <ImageView
+                android:id="@+id/border"
+                android:layout_width="12dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="86dp"
+                android:layout_marginTop="10dp"
+                app:srcCompat="@drawable/border" />
+
+            <ImageView
+                android:id="@+id/bat3"
+                android:layout_width="24dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="64dp"
+                app:srcCompat="@drawable/level3" />
+
+            <ImageView
+                android:id="@+id/bat2"
+                android:layout_width="24dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="48dp"
+                app:srcCompat="@drawable/level3" />
+
+            <ImageView
+                android:id="@+id/bat1"
+                android:layout_width="24dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="24dp"
+                app:srcCompat="@drawable/level2" />
+
+            <ImageView
+                android:id="@+id/bat0"
+                android:layout_width="25dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="1dp"
+                app:srcCompat="@drawable/level1" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="409dp"
+        android:layout_height="618dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginEnd="1dp"
+        android:layout_marginBottom="1dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        >
+
+        <FrameLayout
+            android:id="@+id/pwrLayout"
+            android:layout_width="111dp"
+            android:layout_height="128dp"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="10dp">
+
+            <ImageView
+                android:id="@+id/pwrbtnon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/pwbtnon" />
+
+            <ImageView
+                android:id="@+id/pwrbtnoff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/pwbtnoff" />
+
+            <Button
+                android:id="@+id/pwBtn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/boostLayout"
+            android:layout_width="151dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="240dp"
+            android:layout_marginTop="200dp"
+            android:layout_marginEnd="20dp">
+
+            <TextView
+                android:id="@+id/boost"
+                style="@style/Widget.MaterialComponents.TextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="22sp"
+                android:text="Boost"
+                android:textAlignment="center"
+                android:textSize="26sp" />
+
+            <ImageView
+                android:id="@+id/boostselect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                app:srcCompat="@drawable/modeselected" />
+
+            <ImageView
+                android:id="@+id/boostnotselect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/boost" />
+
+            <Button
+                android:id="@+id/boostBtn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/standardLayout"
+            android:layout_width="151dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="200dp">
+
+            <TextView
+                android:id="@+id/standard"
+                style="@style/Widget.MaterialComponents.TextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="22sp"
+                android:text="Standard"
+                android:textAlignment="center"
+                android:textSize="26sp" />
+
+            <ImageView
+                android:id="@+id/standardselect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/modeselected"
+                tools:visibility="invisible" />
+
+            <ImageView
+                android:id="@+id/standardnotselect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/boost"
+                tools:visibility="visible" />
+
+            <Button
+                android:id="@+id/stdBtn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/hyperboostLayout"
+            android:layout_width="151dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="400dp">
+
+            <TextView
+                android:id="@+id/hyperboost"
+                style="@style/Widget.MaterialComponents.TextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="24sp"
+                android:text="HyperBoost"
+                android:textAlignment="center"
+                android:textSize="22sp" />
+
+            <ImageView
+                android:id="@+id/hyperboostselect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                app:srcCompat="@drawable/modeselected" />
+
+            <ImageView
+                android:id="@+id/hyperboostnotselect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/boost" />
+
+            <Button
+                android:id="@+id/hyBoostBtn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/driwashLayout"
+            android:layout_width="151dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="240dp"
+            android:layout_marginTop="400dp"
+            android:layout_marginEnd="20dp">
+
+            <TextView
+                android:id="@+id/driwash"
+                style="@style/Widget.MaterialComponents.TextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="21sp"
+                android:text="DriWash"
+                android:textAlignment="center"
+                android:textSize="26sp" />
+
+            <ImageView
+                android:id="@+id/driwashselect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                app:srcCompat="@drawable/modeselected" />
+
+            <ImageView
+                android:id="@+id/driwashnotselect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/boost" />
+
+            <Button
+                android:id="@+id/driBtn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

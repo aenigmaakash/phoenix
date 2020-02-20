@@ -4,13 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:background="@drawable/background"
+    >
 
     <ImageView
         android:id="@+id/bat3"
         android:layout_width="31dp"
         android:layout_height="29dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="12dp"
         android:layout_marginTop="12dp"
         app:layout_constraintStart_toEndOf="@+id/bat2"
         app:layout_constraintTop_toTopOf="parent"
@@ -20,7 +22,7 @@
         android:id="@+id/bat2"
         android:layout_width="35dp"
         android:layout_height="28dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="12dp"
         android:layout_marginTop="12dp"
         app:layout_constraintStart_toEndOf="@+id/bat1"
         app:layout_constraintTop_toTopOf="parent"
@@ -30,82 +32,51 @@
         android:id="@+id/bat1"
         android:layout_width="33dp"
         android:layout_height="27dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="12dp"
         android:layout_marginTop="12dp"
         app:layout_constraintStart_toEndOf="@+id/bat0"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@android:color/darker_gray" />
 
     <Button
-        android:id="@+id/pwBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="160dp"
-        android:layout_marginTop="140dp"
-        android:text="Power"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
         android:id="@+id/stdBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="80dp"
-        android:layout_marginTop="52dp"
-        android:text="Standard"
+        android:layout_width="122dp"
+        android:layout_height="69dp"
+        android:layout_marginStart="76dp"
+        android:layout_marginTop="84dp"
+        android:background="@drawable/standard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pwBtn" />
 
     <Button
-        android:id="@+id/reconnect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="160dp"
-        android:layout_marginTop="348dp"
-        android:text="Retry"
-        android:visibility="invisible"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/stdBtn" />
-
-    <Button
         android:id="@+id/boostBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="60dp"
-        android:text="Boost"
-        app:layout_constraintStart_toEndOf="@+id/stdBtn"
+        android:layout_width="87dp"
+        android:layout_height="63dp"
+        android:layout_marginTop="84dp"
+        android:layout_marginEnd="92dp"
+        android:background="@drawable/boost"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pwBtn" />
 
     <Button
         android:id="@+id/hyBoostBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="80dp"
-        android:layout_marginTop="52dp"
-        android:text="Hyper Boost"
+        android:layout_width="124dp"
+        android:layout_height="74dp"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="48dp"
+        android:background="@drawable/hyperboost"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/stdBtn" />
 
     <Button
         android:id="@+id/driBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="64dp"
-        android:layout_marginTop="36dp"
-        android:text="DriWash"
-        app:layout_constraintStart_toEndOf="@+id/hyBoostBtn"
+        android:layout_width="116dp"
+        android:layout_height="71dp"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="64dp"
+        android:background="@drawable/driwash"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/boostBtn" />
-
-    <Button
-        android:id="@+id/refreshBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="160dp"
-        android:layout_marginTop="436dp"
-        android:text="Refresh"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/bat0"
@@ -138,7 +109,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/unitName"
+        android:id="@+id/unitNameView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="152dp"
@@ -146,5 +117,43 @@
         android:text="John's Ozonics"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="8dp"
+        android:text="Battery"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bat1" />
+
+    <ToggleButton
+        android:id="@+id/pwBtn"
+        android:layout_width="122dp"
+        android:layout_height="139dp"
+        android:layout_marginStart="148dp"
+        android:layout_marginTop="68dp"
+        android:background="#00000000"
+        android:text="ToggleButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/unitNameView" />
+
+    <ImageView
+        android:id="@+id/pwBtnOff"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        app:layout_constraintStart_toStartOf="@+id/pwBtn"
+        app:layout_constraintTop_toTopOf="@+id/pwBtn"
+        app:srcCompat="@drawable/pwbtnoff" />
+
+    <ImageView
+        android:id="@+id/pwBtnOn"
+        android:layout_width="118dp"
+        android:layout_height="137dp"
+        app:layout_constraintStart_toStartOf="@+id/pwBtn"
+        app:layout_constraintTop_toTopOf="@+id/pwBtn"
+        app:srcCompat="@drawable/pwbtnon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

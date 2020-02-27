@@ -95,6 +95,7 @@ class DeviceList : AppCompatActivity() {
         deviceList.setOnItemClickListener { parent, view, position, id ->
             //Toast.makeText(this, macId, Toast.LENGTH_SHORT).show()
             bluetoothLeScanner.stopScan(scanCallback)
+            bluetoothLeScanner.flushPendingScanResults(scanCallback)
             val intent = Intent(applicationContext, MainActivity::class.java)
             intent.putExtra("Device", mBTDevices[position])
             startActivity(intent)

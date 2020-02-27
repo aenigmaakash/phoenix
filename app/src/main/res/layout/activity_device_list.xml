@@ -8,24 +8,91 @@
     android:background="@drawable/background"
     >
 
-    <ToggleButton
-        android:id="@+id/bluetoothOn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="136dp"
-        android:layout_marginTop="68dp"
-        android:text="ToggleButton"
-        android:textOff="Bluetooth OFF"
-        android:textOn="Bluetooth ON"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ListView
-        android:id="@+id/deviceList"
-        android:layout_width="413dp"
-        android:layout_height="583dp"
+    <FrameLayout
+        android:id="@+id/logoLayout"
+        android:layout_width="300dp"
+        android:layout_height="100dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/sitelogo" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/scanLayout"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="200dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <FrameLayout
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="60dp">
+
+            <ImageView
+                android:id="@+id/scan"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:srcCompat="@drawable/scan" />
+
+            <ImageView
+                android:id="@+id/select"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="visible"
+                app:srcCompat="@drawable/selectscan" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/ellipse2Layout"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:visibility="visible">
+
+            <ImageView
+                android:id="@+id/ellipse2"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_margin="20dp"
+                app:srcCompat="@drawable/ellipse25" />
+
+            <FrameLayout
+                android:id="@+id/ellipse1Layout"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_margin="50dp">
+
+                <ImageView
+                    android:id="@+id/ellipse1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:srcCompat="@drawable/ellipse25" />
+            </FrameLayout>
+        </FrameLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="571dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ListView
+            android:id="@+id/deviceList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

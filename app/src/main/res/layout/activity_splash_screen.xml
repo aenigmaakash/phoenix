@@ -6,4 +6,15 @@
     android:layout_height="match_parent"
     tools:context=".SplashScreenActivity"
     android:background="@drawable/background"
-    />
+    >
+
+    <ImageView
+        android:id="@+id/siteLogo"
+        android:layout_width="300dp"
+        android:layout_height="100dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sitelogo" />
+</androidx.constraintlayout.widget.ConstraintLayout>

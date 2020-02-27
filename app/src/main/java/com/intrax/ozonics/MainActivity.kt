@@ -1,8 +1,7 @@
 package com.intrax.ozonics
 
 import android.app.ProgressDialog
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothSocket
+import android.bluetooth.*
 import android.content.Context
 import android.content.Intent
 import android.os.AsyncTask
@@ -11,7 +10,16 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_test.*
+import kotlinx.android.synthetic.main.activity_test.bat0
+import kotlinx.android.synthetic.main.activity_test.bat1
+import kotlinx.android.synthetic.main.activity_test.bat2
+import kotlinx.android.synthetic.main.activity_test.bat3
+import kotlinx.android.synthetic.main.activity_test.boostBtn
+import kotlinx.android.synthetic.main.activity_test.driBtn
+import kotlinx.android.synthetic.main.activity_test.hyBoostBtn
+import kotlinx.android.synthetic.main.activity_test.pwBtn
+import kotlinx.android.synthetic.main.activity_test.stdBtn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -23,9 +31,11 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     companion object{
-        val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+        private val serviceUUID = UUID.fromString("e14d460c-32bc-457e-87f8-b56d1eb24318")
+        private val characteristicUUID = UUID.fromString("08b332a8-f4f6-4222-b645-60073ac6823f")
         var btSocket: BluetoothSocket? = null
         lateinit var btAdapter: BluetoothAdapter
+        lateinit var bluetoothGatt: BluetoothGatt
         var isConnected:Boolean = false
         lateinit var address: String
         lateinit var progressDialog: ProgressDialog
@@ -42,16 +52,19 @@ class MainActivity : AppCompatActivity() {
         const val SET_NAME_COMMAND = 0x46
         val firstTimeFlagforApp = true
         var unitName:String = "Ozonics"
+        var connectionState = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_test)
 
-        address = intent.getStringExtra("DeviceAddress")
+        val device = intent.extras["Device"] as BluetoothDevice
+        bluetoothGatt = device.connectGatt(this, true, bluetoothGattCallback)
+
         //address = "00:19:09:03:08:0C"
-        ConnectBT(this).execute()
-        Refresh(this).execute()
+        //ConnectBT(this).execute()
+        //Refresh(this).execute()
         /**
          * try viewgroup and check if it works
          */
@@ -60,10 +73,17 @@ class MainActivity : AppCompatActivity() {
         bat1.visibility = View.INVISIBLE
         bat2.visibility = View.INVISIBLE
         bat3.visibility = View.INVISIBLE
-        pwBtn.textOff = ""
-        pwBtn.textOn = ""
-        pwBtnOn.visibility = View.INVISIBLE
-        pwBtnOff.visibility = View.VISIBLE
+//        pwBtn.textOff = ""
+//        pwBtn.textOn = ""
+        pwrbtnon.visibility = View.INVISIBLE
+        pwrbtnoff.visibility = View.VISIBLE
+        settings_pressed.visibility = View.INVISIBLE
+        info_pressed.visibility = View.INVISIBLE
+        controlLayout.visibility = View.INVISIBLE
+        standardselect.visibility = View.INVISIBLE
+        boostselect.visibility = View.INVISIBLE
+        hyperboostselect.visibility = View.INVISIBLE
+        driwashselect.visibility = View.INVISIBLE
 
         GlobalScope.launch(Dispatchers.Main) {
             bat0.visibility = View.VISIBLE
@@ -73,7 +93,7 @@ class MainActivity : AppCompatActivity() {
             bat2.visibility = View.VISIBLE
             delay(500)
             bat3.visibility = View.VISIBLE
-        }
+        }           //initial battery animation
 
         pwBtn.setOnClickListener {
             if(btAdapter.isEnabled && isConnected) {
@@ -82,17 +102,17 @@ class MainActivity : AppCompatActivity() {
                     delay(100)
                     val power = receiveCommand()
                     if(power.contains("P")){
-                        Toast.makeText(this@MainActivity, "Device turned ON", Toast.LENGTH_SHORT).show()
-                        pwBtnOff.visibility = View.INVISIBLE
-                        pwBtnOn.visibility = View.VISIBLE
+                        //Toast.makeText(this@MainActivity, "Device turned ON", Toast.LENGTH_SHORT).show()
+                        pwrbtnoff.visibility = View.INVISIBLE
+                        pwrbtnon.visibility = View.VISIBLE
                     }
                     else if (power.contains("Q")){
-                        Toast.makeText(this@MainActivity, "Device turned OFF", Toast.LENGTH_SHORT).show()
-                        pwBtnOff.visibility = View.VISIBLE
-                        pwBtnOn.visibility = View.INVISIBLE
+                        //Toast.makeText(this@MainActivity, "Device turned OFF", Toast.LENGTH_SHORT).show()
+                        pwrbtnoff.visibility = View.VISIBLE
+                        pwrbtnon.visibility = View.INVISIBLE
                     }
                     else
-                        Toast.makeText(this@MainActivity, power, Toast.LENGTH_SHORT).show()
+                        //Toast.makeText(this@MainActivity, power, Toast.LENGTH_SHORT).show()
                     Log.d("Power", power)
                 }
             }
@@ -113,7 +133,15 @@ class MainActivity : AppCompatActivity() {
                     delay(100)
                     val mode = receiveCommand()
                     if(mode.contains("0")){
-                        Toast.makeText(this@MainActivity, "Standard mode activated", Toast.LENGTH_SHORT).show()
+                        standardselect.visibility = View.VISIBLE
+                        boostselect.visibility = View.INVISIBLE
+                        hyperboostselect.visibility = View.INVISIBLE
+                        driwashselect.visibility = View.INVISIBLE
+                        standard.setTextColor(0)
+                        boost.setTextColor(0xFFFFFF)
+                        hyperboost.setTextColor(0xFFFFFF)
+                        driwash.setTextColor(0xFFFFFF)
+                        //Toast.makeText(this@MainActivity, "Standard mode activated", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -130,9 +158,17 @@ class MainActivity : AppCompatActivity() {
                 sendCommand(BOOST_MODE_COMMAND)
                 GlobalScope.launch(Dispatchers.Main) {
                     delay(100)
-                    val boost = receiveCommand()
-                    if(boost.contains("1"))
-                        Toast.makeText(this@MainActivity, "Boost Mode activated", Toast.LENGTH_SHORT).show()
+                    val mode = receiveCommand()
+                    if(mode.contains("1")){
+                        standardselect.visibility = View.INVISIBLE
+                        boostselect.visibility = View.VISIBLE
+                        hyperboostselect.visibility = View.INVISIBLE
+                        driwashselect.visibility = View.INVISIBLE
+                        standard.setTextColor(0xFFFFFF)
+                        boost.setTextColor(0)
+                        hyperboost.setTextColor(0xFFFFFF)
+                        driwash.setTextColor(0xFFFFFF)
+                    }
                 }
             }
             else{
@@ -149,8 +185,17 @@ class MainActivity : AppCompatActivity() {
                 GlobalScope.launch(Dispatchers.Main) {
                     delay(100)
                     val hyBoost = receiveCommand()
-                    if(hyBoost.contains("2"))
-                        Toast.makeText(this@MainActivity, "Hyperboost mode activated", Toast.LENGTH_SHORT).show()
+                    if(hyBoost.contains("2")){
+                        standardselect.visibility = View.INVISIBLE
+                        boostselect.visibility = View.INVISIBLE
+                        hyperboostselect.visibility = View.VISIBLE
+                        driwashselect.visibility = View.INVISIBLE
+                        standard.setTextColor(0xFFFFFF)
+                        boost.setTextColor(0xFFFFFF)
+                        hyperboost.setTextColor(0)
+                        driwash.setTextColor(0xFFFFFF)
+                    }
+                        //Toast.makeText(this@MainActivity, "Hyperboost mode activated", Toast.LENGTH_SHORT).show()
                 }
             }
             else{
@@ -166,9 +211,18 @@ class MainActivity : AppCompatActivity() {
                 sendCommand(DRIWASH_MODE_COMMAND)
                 GlobalScope.launch(Dispatchers.Main) {
                     delay(100)
-                    val driwash = receiveCommand()
-                    if(driwash.contains("3"))
-                        Toast.makeText(this@MainActivity, "DriWash Mode activated", Toast.LENGTH_SHORT).show()
+                    val mode = receiveCommand()
+                    if(mode.contains("3")){
+                        standardselect.visibility = View.INVISIBLE
+                        boostselect.visibility = View.INVISIBLE
+                        hyperboostselect.visibility = View.INVISIBLE
+                        driwashselect.visibility = View.VISIBLE
+                        standard.setTextColor(0xFFFFFF)
+                        boost.setTextColor(0xFFFFFF)
+                        hyperboost.setTextColor(0xFFFFFF)
+                        driwash.setTextColor(0)
+                    }
+                        //Toast.makeText(this@MainActivity, "DriWash Mode activated", Toast.LENGTH_SHORT).show()
                 }
             }
             else{
@@ -179,7 +233,37 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        settings.setOnClickListener {
+            settingsLayout.visibility = View.VISIBLE
+            controlLayout.visibility = View.INVISIBLE
+            infoLayout.visibility = View.INVISIBLE
+            GlobalScope.launch(Dispatchers.Main) {
+                settings_pressed.visibility = View.VISIBLE
+                delay(500)
+                settings_pressed.visibility = View.INVISIBLE
+            }
+        }
 
+        info.setOnClickListener {
+            infoLayout.visibility = View.VISIBLE
+            settingsLayout.visibility = View.INVISIBLE
+            controlLayout.visibility = View.INVISIBLE
+            GlobalScope.launch(Dispatchers.Main) {
+                info_pressed.visibility = View.VISIBLE
+                delay(500)
+                info_pressed.visibility = View.INVISIBLE
+            }
+        }
+
+        scanDevice.setOnClickListener {
+            val intent = Intent(applicationContext, DeviceList::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        checkUpdate.setOnClickListener {
+
+        }
     }
 
 
@@ -207,107 +291,21 @@ class MainActivity : AppCompatActivity() {
         return String(bytes)
     }
 
-    private fun disconnect(){
-        if(btSocket!=null){
-            try{
-                btSocket!!.close()
-                btSocket = null
-                isConnected = false
-            }catch (e: IOException){
-                e.printStackTrace()
-            }
-        }
-    }
-
-    /**
-     * Buetooth connection is an asynchronous task that does not return any value to the thread that called it.
-     *
-     */
-    private class ConnectBT(c: Context): AsyncTask<Void, Void, String>(){
-        private var connectionSuccessful: Boolean = true
-        private val context: Context
-
-        init{
-            this.context = c
-        }
-
-        override fun onPreExecute() {
-            super.onPreExecute()
-            //progressDialog = ProgressDialog.show(context, "Please wait...", "Connecting")
-        }
-
-        override fun doInBackground(vararg params: Void?): String? {
-           try {
-               if(btSocket==null || !isConnected){
-                   btAdapter = BluetoothAdapter.getDefaultAdapter()
-                   val device = btAdapter.getRemoteDevice(address)
-                   btSocket = device.createInsecureRfcommSocketToServiceRecord(uuid)
-                   BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
-                   btSocket!!.connect()
-               }
-
-           }catch (e: IOException){
-               connectionSuccessful = false
-               e.printStackTrace()
-           }
-            return null
-        }
-
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-            if(!connectionSuccessful){
-                Toast.makeText(context, "Couldn't connect please try again", Toast.LENGTH_SHORT).show()
-            }
-            else{
-                isConnected = true
-                Toast.makeText(context, "Device connected ", Toast.LENGTH_SHORT).show()
-            }
-
-            //progressDialog.dismiss()
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        disconnect()
+        if(connectionState)
+        bluetoothGatt.disconnect()//disconnect()
     }
 
     override fun onPause() {
         super.onPause()
-        disconnect()
+        if(connectionState)
+        bluetoothGatt.disconnect()//disconnect()
     }
 
     override fun onResume() {
         super.onResume()
-        ConnectBT(this).execute()
-    }
-
-    private fun batDisplay(num: Int){
-        if(num == 0){
-            bat0.visibility = View.VISIBLE
-            bat1.visibility = View.INVISIBLE
-            bat2.visibility = View.INVISIBLE
-            bat3.visibility = View.INVISIBLE
-        }
-        else if(num == 1){
-            bat0.visibility = View.VISIBLE
-            bat1.visibility = View.VISIBLE
-            bat2.visibility = View.INVISIBLE
-            bat3.visibility = View.INVISIBLE
-        }
-        else if(num == 2){
-            bat0.visibility = View.VISIBLE
-            bat1.visibility = View.VISIBLE
-            bat2.visibility = View.VISIBLE
-            bat3.visibility = View.INVISIBLE
-        }
-        else if(num == 3){
-            bat0.visibility = View.VISIBLE
-            bat1.visibility = View.VISIBLE
-            bat2.visibility = View.VISIBLE
-            bat3.visibility = View.VISIBLE
-        }
-
+        bluetoothGatt.connect()//ConnectBT(this).execute()
     }
 
 
@@ -379,16 +377,28 @@ class MainActivity : AppCompatActivity() {
                 sendCommand(MODE_INFORMATION_COMMAND)
                 val mode = receiveCommand()
                 if(mode.contains("0")){
-
+                    standardselect.visibility = View.VISIBLE
+                    boostselect.visibility = View.INVISIBLE
+                    hyperboostselect.visibility = View.INVISIBLE
+                    driwashselect.visibility = View.INVISIBLE
                 }
                 else if(mode.contains("1")){
-                    Toast.makeText(context, "Boost mode", Toast.LENGTH_SHORT).show()
+                    standardselect.visibility = View.INVISIBLE
+                    boostselect.visibility = View.VISIBLE
+                    hyperboostselect.visibility = View.INVISIBLE
+                    driwashselect.visibility = View.INVISIBLE
                 }
                 else if(mode.contains("2")){
-
+                    standardselect.visibility = View.INVISIBLE
+                    boostselect.visibility = View.INVISIBLE
+                    hyperboostselect.visibility = View.VISIBLE
+                    driwashselect.visibility = View.INVISIBLE
                 }
                 else if(mode.contains("3")){
-
+                    standardselect.visibility = View.INVISIBLE
+                    boostselect.visibility = View.INVISIBLE
+                    hyperboostselect.visibility = View.INVISIBLE
+                    driwashselect.visibility = View.VISIBLE
                 }
                 //else
                     //Toast.makeText(context, mode, Toast.LENGTH_SHORT).show()
@@ -451,6 +461,50 @@ class MainActivity : AppCompatActivity() {
                 bat2.visibility = View.VISIBLE
                 bat3.visibility = View.VISIBLE
             }
+        }
+    }
+
+    private val bluetoothGattCallback = object : BluetoothGattCallback() {
+
+        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+            super.onConnectionStateChange(gatt, status, newState)
+            when(newState){
+                BluetoothGatt.STATE_DISCONNECTED -> GlobalScope.launch(Dispatchers.Main) {
+                    connectionState = false
+                    controlLayout.visibility = View.INVISIBLE
+                    Log.w("Connection Status", "Disconnected")
+                }
+                BluetoothGatt.STATE_CONNECTED -> GlobalScope.launch(Dispatchers.Main) {
+                    connectionState = true
+                    bluetoothGatt.discoverServices()
+                    controlLayout.visibility = View.VISIBLE
+                    Log.w("Connection Status", "Connected")
+                }
+            }
+        }
+
+        override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+            super.onServicesDiscovered(gatt, status)
+            val gattServices = bluetoothGatt.services
+            val characteristic = gatt?.getService(serviceUUID)?.getCharacteristic(characteristicUUID)
+            characteristic?.value = byteArrayOf(BATTERY_INFORMATION_COMMAND.toByte())
+            gatt?.writeCharacteristic(characteristic)
+        }
+
+        override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+            super.onCharacteristicWrite(gatt, characteristic, status)
+            Log.i("From Write", characteristic?.value.toString())
+            gatt?.readCharacteristic(characteristic)
+        }
+
+        override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+            super.onCharacteristicRead(gatt, characteristic, status)
+            Log.i("Battery characteristic", characteristic?.value.toString())
+        }
+
+        override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
+            super.onCharacteristicChanged(gatt, characteristic)
+            val care = ""
         }
     }
 

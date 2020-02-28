@@ -34,6 +34,8 @@ class MainActivity : AppCompatActivity() {
     companion object{
         private val serviceUUID = UUID.fromString("e14d460c-32bc-457e-87f8-b56d1eb24318")
         private val characteristicUUID = UUID.fromString("08b332a8-f4f6-4222-b645-60073ac6823f")
+        private val batteryServiceUUID = UUID.fromString("7c29343f-f1c9-4bb0-be5d-e5f8e16cb95c")
+        private val batteryCharacteristicUUID = UUID.fromString("6d531619-6ab6-4ab6-ae49-ff00e96d88f4")
         var btSocket: BluetoothSocket? = null
         lateinit var btAdapter: BluetoothAdapter
         lateinit var bluetoothGatt: BluetoothGatt
@@ -56,7 +58,8 @@ class MainActivity : AppCompatActivity() {
         var connectionState = false
         var WHITE = 0
         var BLACK = 0
-        lateinit var bluetoothGattCharacteristic: BluetoothGattCharacteristic
+        var bluetoothGattCharacteristic: BluetoothGattCharacteristic? = null
+        var batteryGattCharacteristic: BluetoothGattCharacteristic? = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,10 +102,10 @@ class MainActivity : AppCompatActivity() {
             bat3.visibility = View.VISIBLE
         }           //initial battery animation
 
-
+        Refresh().execute()
         pwBtn.setOnClickListener {
             if(connectionState){
-                bluetoothGattCharacteristic.value = byteArrayOf(POWER_INFORMATION_COMMAND.toByte())
+                bluetoothGattCharacteristic!!.value = byteArrayOf(POWER_INFORMATION_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
                 pwBtn.isClickable = false
                 Toast.makeText(this, "Changing...", Toast.LENGTH_SHORT).show()
@@ -113,7 +116,7 @@ class MainActivity : AppCompatActivity() {
 
         stdBtn.setOnClickListener {
             if(connectionState){
-                bluetoothGattCharacteristic.value = byteArrayOf(STANDARD_MODE_COMMAND.toByte())
+                bluetoothGattCharacteristic!!.value = byteArrayOf(STANDARD_MODE_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
                 stdBtn.isClickable = false
             }
@@ -121,7 +124,7 @@ class MainActivity : AppCompatActivity() {
 
         boostBtn.setOnClickListener {
             if(connectionState){
-                bluetoothGattCharacteristic.value = byteArrayOf(BOOST_MODE_COMMAND.toByte())
+                bluetoothGattCharacteristic!!.value = byteArrayOf(BOOST_MODE_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
                 boostBtn.isClickable = false
             }
@@ -129,7 +132,7 @@ class MainActivity : AppCompatActivity() {
 
         hyBoostBtn.setOnClickListener {
             if(connectionState){
-                bluetoothGattCharacteristic.value = byteArrayOf(HYPERBOOST_MODE_COMMAND.toByte())
+                bluetoothGattCharacteristic!!.value = byteArrayOf(HYPERBOOST_MODE_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
                 hyBoostBtn.isClickable = false
             }
@@ -137,7 +140,7 @@ class MainActivity : AppCompatActivity() {
 
         driBtn.setOnClickListener {
             if(connectionState){
-                bluetoothGattCharacteristic.value = byteArrayOf(DRIWASH_MODE_COMMAND.toByte())
+                bluetoothGattCharacteristic!!.value = byteArrayOf(DRIWASH_MODE_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
                 driBtn.isClickable = false
             }
@@ -208,12 +211,7 @@ class MainActivity : AppCompatActivity() {
     /**
      * Refreshes battery, mode, unit name and serial number as soon as the connection is established
      */
-    inner class Refresh(c: Context) : AsyncTask<Void, Void, Boolean>() {
-        private val context: Context
-
-        init{
-            this.context = c
-        }
+    inner class Refresh() : AsyncTask<Void, Void, Boolean>() {
 
         override fun onPreExecute() {
             super.onPreExecute()
@@ -221,115 +219,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun doInBackground(vararg params: Void?): Boolean? {
-            Thread.sleep(1500)
-            while(!isConnected);
-
+            Thread.sleep(1000)
+            while(!connectionState && batteryGattCharacteristic!=null && bluetoothGattCharacteristic!=null);
+            Thread.sleep(2000)
             return null
         }
 
         override fun onPostExecute(result: Boolean?) {
             super.onPostExecute(result)
-            if(isConnected){
+            Log.i("Refresh Task", "Executed before if")
+            if (connectionState) {
+                bluetoothGattCharacteristic!!.value = byteArrayOf(BATTERY_INFORMATION_COMMAND.toByte())
+                bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
 
-                /**
-                 * Battery information receiving and setting up UI
-                 */
-                sendCommand(BATTERY_INFORMATION_COMMAND)
-                val batteryInformation = receiveCommand().toInt()
-                if(batteryInformation in 1..100){
-                    if (batteryInformation in 1..25)
-                        batDisplay(0)
-                    else if(batteryInformation in 26..50)
-                        batDisplay(1)
-                    else if(batteryInformation in 51..75)
-                        batDisplay(2)
-                    else if(batteryInformation in 76..100)
-                        batDisplay(3)
-                }
-                else
-                    Toast.makeText(context, "Invalid battery response", Toast.LENGTH_SHORT).show()
-
-
-                /**
-                 * To check if ESP already has a name in it or not, if not provide a UI for a new name
-                 * else default name ozonics is displayed
-                 */
-//                sendCommand(FIRST_TIME_FLAG_COMMAND)
-//                val firstTimeFlagforESP = receiveCommand()
-//                if(firstTimeFlagforESP.contains("True")){
-//                    sendCommand(SET_NAME_COMMAND)
-//                    sendCommand(unitName)
-//                }
-//                else if(firstTimeFlagforESP.contains("False")){
-//                    sendCommand(GET_NAME_COMMAND)
-//                    unitName = receiveCommand()
-//                }
-//                unitNameView.visibility = View.VISIBLE
-//                unitNameView.text = unitName
-
-                /**
-                 * Mode information receiving and setting up UI
-                 */
-                sendCommand(MODE_INFORMATION_COMMAND)
-                val mode = receiveCommand()
-                if(mode.contains("0")){
-                    standardselect.visibility = View.VISIBLE
-                    boostselect.visibility = View.INVISIBLE
-                    hyperboostselect.visibility = View.INVISIBLE
-                    driwashselect.visibility = View.INVISIBLE
-                }
-                else if(mode.contains("1")){
-                    standardselect.visibility = View.INVISIBLE
-                    boostselect.visibility = View.VISIBLE
-                    hyperboostselect.visibility = View.INVISIBLE
-                    driwashselect.visibility = View.INVISIBLE
-                }
-                else if(mode.contains("2")){
-                    standardselect.visibility = View.INVISIBLE
-                    boostselect.visibility = View.INVISIBLE
-                    hyperboostselect.visibility = View.VISIBLE
-                    driwashselect.visibility = View.INVISIBLE
-                }
-                else if(mode.contains("3")){
-                    standardselect.visibility = View.INVISIBLE
-                    boostselect.visibility = View.INVISIBLE
-                    hyperboostselect.visibility = View.INVISIBLE
-                    driwashselect.visibility = View.VISIBLE
-                }
-                //else
-                    //Toast.makeText(context, mode, Toast.LENGTH_SHORT).show()
-
-
-                /**
-                 * Serial number
-                 */
-//                sendCommand(SERIAL_NUMBER_COMMAND)
-//                val serialNum = receiveCommand()
-//                serialN.text = serialNum
-//                serialN.visibility = View.VISIBLE
-
+                Log.i("Refresh Task", "Executed after if")
             }
-        }
-
-        private fun sendCommand(command:Int): Boolean{
-            if(btSocket != null){
-                try {
-                    btSocket!!.outputStream.write(command)
-                    return true
-                } catch (e: IOException){
-                    e.printStackTrace()
-                    return false
-                }
-            }
-            return false
-        }
-
-        private fun receiveCommand():String {
-            while(btSocket!!.inputStream.available()==0);               //check if any data is there, because 'available' gives int value not boolean
-            val available:Int = btSocket!!.inputStream.available()         // 'available' stores the no of bytes available in the buffer
-            val bytes = ByteArray(available)
-            btSocket!!.inputStream.read(bytes)
-            return String(bytes)
         }
 
         private fun batDisplay(num: Int){
@@ -375,18 +280,17 @@ class MainActivity : AppCompatActivity() {
                     bluetoothGatt.discoverServices()
                     controlLayout.visibility = View.VISIBLE
                     Log.w("Connection Status", "Connected")
-
                 }
             }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             super.onServicesDiscovered(gatt, status)
-            bluetoothGattCharacteristic = gatt?.getService(serviceUUID)!!.getCharacteristic(characteristicUUID)
-            bluetoothGattCharacteristic.value = byteArrayOf(MODE_INFORMATION_COMMAND.toByte())
-            gatt.writeCharacteristic(bluetoothGattCharacteristic)
-            bluetoothGattCharacteristic.value = byteArrayOf(BATTERY_INFORMATION_COMMAND.toByte())
-            gatt.writeCharacteristic(bluetoothGattCharacteristic)
+            bluetoothGattCharacteristic = gatt!!.getService(serviceUUID)!!.getCharacteristic(characteristicUUID)
+            //batteryGattCharacteristic = gatt!!.getService(batteryServiceUUID)!!.getCharacteristic(batteryCharacteristicUUID)
+            bluetoothGattCharacteristic!!.value = byteArrayOf(MODE_INFORMATION_COMMAND.toByte())
+            bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+            bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {

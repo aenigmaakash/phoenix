@@ -99,41 +99,13 @@ class MainActivity : AppCompatActivity() {
             bat3.visibility = View.VISIBLE
         }           //initial battery animation
 
-//        pwBtn.setOnClickListener {
-//            if(btAdapter.isEnabled && isConnected) {
-//                sendCommand(POWER_INFORMATION_COMMAND)
-//                GlobalScope.launch(Dispatchers.Main) {
-//                    delay(100)
-//                    val power = receiveCommand()
-//                    if(power.contains("P")){
-//                        //Toast.makeText(this@MainActivity, "Device turned ON", Toast.LENGTH_SHORT).show()
-//                        pwrbtnoff.visibility = View.INVISIBLE
-//                        pwrbtnon.visibility = View.VISIBLE
-//                    }
-//                    else if (power.contains("Q")){
-//                        //Toast.makeText(this@MainActivity, "Device turned OFF", Toast.LENGTH_SHORT).show()
-//                        pwrbtnoff.visibility = View.VISIBLE
-//                        pwrbtnon.visibility = View.INVISIBLE
-//                    }
-//                    else
-//                        //Toast.makeText(this@MainActivity, power, Toast.LENGTH_SHORT).show()
-//                    Log.d("Power", power)
-//                }
-//            }
-//            else{
-//                Toast.makeText(this, "Bluetooth device not connected", Toast.LENGTH_SHORT).show()
-//                val intent = Intent(applicationContext, DeviceList::class.java)
-//                startActivity(intent)
-//                finish()
-//            }
-//
-//
-//        }
 
         pwBtn.setOnClickListener {
             if(connectionState){
                 bluetoothGattCharacteristic.value = byteArrayOf(POWER_INFORMATION_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                pwBtn.isClickable = false
+                Toast.makeText(this, "Changing...", Toast.LENGTH_SHORT).show()
             }
             else
                 Toast.makeText(this@MainActivity, "Connection Lost", Toast.LENGTH_SHORT).show()
@@ -143,6 +115,7 @@ class MainActivity : AppCompatActivity() {
             if(connectionState){
                 bluetoothGattCharacteristic.value = byteArrayOf(STANDARD_MODE_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                stdBtn.isClickable = false
             }
         }
 
@@ -150,6 +123,7 @@ class MainActivity : AppCompatActivity() {
             if(connectionState){
                 bluetoothGattCharacteristic.value = byteArrayOf(BOOST_MODE_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                boostBtn.isClickable = false
             }
         }
 
@@ -157,6 +131,7 @@ class MainActivity : AppCompatActivity() {
             if(connectionState){
                 bluetoothGattCharacteristic.value = byteArrayOf(HYPERBOOST_MODE_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                hyBoostBtn.isClickable = false
             }
         }
 
@@ -164,6 +139,7 @@ class MainActivity : AppCompatActivity() {
             if(connectionState){
                 bluetoothGattCharacteristic.value = byteArrayOf(DRIWASH_MODE_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                driBtn.isClickable = false
             }
         }
 
@@ -198,31 +174,12 @@ class MainActivity : AppCompatActivity() {
         checkUpdate.setOnClickListener {
 
         }
-    }
 
-
-    /**
-     *
-     */
-    private fun sendCommand(command:Int): Boolean{
-        if(btSocket != null){
-            try {
-                btSocket!!.outputStream.write(command)
-                return true
-            } catch (e: IOException){
-                e.printStackTrace()
-                return false
-            }
+        logo.setOnClickListener {
+            controlLayout.visibility = View.VISIBLE
+            infoLayout.visibility = View.INVISIBLE
+            settingsLayout.visibility = View.INVISIBLE
         }
-        return false
-    }
-
-    private fun receiveCommand():String {
-        while(btSocket!!.inputStream.available()==0);               //check if any data is there, because 'available' gives int value not boolean
-        val available:Int = btSocket!!.inputStream.available()         // 'available' stores the no of bytes available in the buffer
-        val bytes = ByteArray(available)
-        btSocket!!.inputStream.read(bytes)
-        return String(bytes)
     }
 
     override fun onDestroy() {
@@ -426,9 +383,10 @@ class MainActivity : AppCompatActivity() {
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             super.onServicesDiscovered(gatt, status)
             bluetoothGattCharacteristic = gatt?.getService(serviceUUID)!!.getCharacteristic(characteristicUUID)
-
             bluetoothGattCharacteristic.value = byteArrayOf(MODE_INFORMATION_COMMAND.toByte())
-            gatt?.writeCharacteristic(bluetoothGattCharacteristic)
+            gatt.writeCharacteristic(bluetoothGattCharacteristic)
+            bluetoothGattCharacteristic.value = byteArrayOf(BATTERY_INFORMATION_COMMAND.toByte())
+            gatt.writeCharacteristic(bluetoothGattCharacteristic)
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
@@ -456,6 +414,7 @@ class MainActivity : AppCompatActivity() {
     private fun controlInfo(characteristic: BluetoothGattCharacteristic?){
         when(characteristic?.getStringValue(0)){
             "P" -> {
+                pwBtn.isClickable = true
                 pwrbtnoff.visibility = View.INVISIBLE
                 pwrbtnon.visibility = View.VISIBLE
                 standardLayout.visibility = View.VISIBLE
@@ -464,6 +423,7 @@ class MainActivity : AppCompatActivity() {
                 driwashLayout.visibility = View.VISIBLE
             }
             "Q" -> {
+                pwBtn.isClickable = true
                 pwrbtnoff.visibility = View.VISIBLE
                 pwrbtnon.visibility = View.INVISIBLE
                 standardLayout.visibility = View.INVISIBLE
@@ -472,6 +432,7 @@ class MainActivity : AppCompatActivity() {
                 driwashLayout.visibility = View.INVISIBLE
             }
             "0" -> {
+                stdBtn.isClickable = true
                 standardselect.visibility = View.VISIBLE
                 boostselect.visibility = View.INVISIBLE
                 hyperboostselect.visibility = View.INVISIBLE
@@ -482,6 +443,7 @@ class MainActivity : AppCompatActivity() {
                 driwash.setTextColor(WHITE)
             }
             "1" -> {
+                boostBtn.isClickable = true
                 standardselect.visibility = View.INVISIBLE
                 boostselect.visibility = View.VISIBLE
                 hyperboostselect.visibility = View.INVISIBLE
@@ -492,6 +454,7 @@ class MainActivity : AppCompatActivity() {
                 driwash.setTextColor(WHITE)
             }
             "2" -> {
+                hyBoostBtn.isClickable = true
                 standardselect.visibility = View.INVISIBLE
                 boostselect.visibility = View.INVISIBLE
                 hyperboostselect.visibility = View.VISIBLE
@@ -502,6 +465,7 @@ class MainActivity : AppCompatActivity() {
                 driwash.setTextColor(WHITE)
             }
             "3" -> {
+                driBtn.isClickable = true
                 standardselect.visibility = View.INVISIBLE
                 boostselect.visibility = View.INVISIBLE
                 hyperboostselect.visibility = View.INVISIBLE
@@ -511,7 +475,45 @@ class MainActivity : AppCompatActivity() {
                 hyperboost.setTextColor(WHITE)
                 driwash.setTextColor(BLACK)
             }
+            "a" -> {
+                batDisplay(3)
+            }
+            "b" -> {
+                batDisplay(2)
+            }
+            "c" -> {
+                batDisplay(1)
+            }
+            "d" -> {
+                batDisplay(0)
+            }
         }
     }
 
+    private fun batDisplay(num: Int){
+        if(num == 0){
+            bat0.visibility = View.VISIBLE
+            bat1.visibility = View.INVISIBLE
+            bat2.visibility = View.INVISIBLE
+            bat3.visibility = View.INVISIBLE
+        }
+        else if(num == 1){
+            bat0.visibility = View.VISIBLE
+            bat1.visibility = View.VISIBLE
+            bat2.visibility = View.INVISIBLE
+            bat3.visibility = View.INVISIBLE
+        }
+        else if(num == 2){
+            bat0.visibility = View.VISIBLE
+            bat1.visibility = View.VISIBLE
+            bat2.visibility = View.VISIBLE
+            bat3.visibility = View.INVISIBLE
+        }
+        else if(num == 3){
+            bat0.visibility = View.VISIBLE
+            bat1.visibility = View.VISIBLE
+            bat2.visibility = View.VISIBLE
+            bat3.visibility = View.VISIBLE
+        }
+    }
 }

@@ -69,29 +69,6 @@ class DeviceList : AppCompatActivity() {
         myBluetooth = myBluetoothManager.adapter
         checkBTPermissions()
 
-//        bluetoothOn.setOnCheckedChangeListener { _, isChecked ->
-//            if(isChecked){
-//                if (myBluetooth == null) {
-//                    Toast.makeText(
-//                        applicationContext,
-//                        "Bluetooth Device Not Available", Toast.LENGTH_LONG).show()
-//                    finish()
-//                } else if (!myBluetooth.isEnabled) {
-//                    val turnBTon = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-//                    startActivityForResult(turnBTon, 1)
-//                }
-//                //searchDevices()
-//                else if (myBluetooth.isEnabled){
-//                    GlobalScope.launch(Dispatchers.Main) {
-//                        scanLeDevice()
-//                    }
-//                }
-//            }
-//            else{
-//                myBluetooth.disable()
-//            }
-//        }
-
         deviceList.setOnItemClickListener { parent, view, position, id ->
             //Toast.makeText(this, macId, Toast.LENGTH_SHORT).show()
             bluetoothLeScanner.stopScan(scanCallback)
@@ -130,9 +107,7 @@ class DeviceList : AppCompatActivity() {
                     }
                 }
             }
-
         }
-
     }
 
     private fun logoAnimation(){
@@ -184,68 +159,6 @@ class DeviceList : AppCompatActivity() {
             animateEllipse2.start()
         }
     }
-
-//    private fun searchDevices(){
-//
-//        val pairedDevices: Set<BluetoothDevice> = myBluetooth.bondedDevices
-//
-//        if(firstTime){
-//            if(myBluetooth.isDiscovering)
-//                myBluetooth.cancelDiscovery()
-//            if(checkGpsStatus()){
-//                if(!myBluetooth.isDiscovering){
-//                    checkBTPermissions()
-//                    myBluetooth.startDiscovery()
-//                    val intent = IntentFilter(BluetoothDevice.ACTION_FOUND)
-//                    registerReceiver(bluetoothBroadcastReceiver, intent)
-//                }
-//            }
-//            else{
-//                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-//                startActivity(intent)
-//                finish()
-//            }
-//        }
-//        else{
-//            if (pairedDevices.isNotEmpty()) {
-//                var i = 0
-//                var pairedDeviceFound = false
-//                for  (device in pairedDevices) {
-//                    mPairedDevices.set(i, device)
-//                    if (device.name.contains(deviceName)){                  //this part searches for 'deviceName' devices that is already paired
-//                        if(!mBTDevices.contains(device)){
-//                            mBTDevices.add(device)
-//                            val deviceListAdapter = DeviceListAdapter(this, R.layout.device_list_layout, mBTDevices)
-//                            deviceList.adapter = deviceListAdapter
-//                        }
-//                    }
-//                    i++
-//                }
-//                if(!pairedDeviceFound){                            //if device not paired discovers device to be manually paired
-//                    if(myBluetooth.isDiscovering)
-//                        myBluetooth.cancelDiscovery()
-//                    if(checkGpsStatus()){
-//                        if(!myBluetooth.isDiscovering){
-//                            checkBTPermissions()
-//                            myBluetooth.startDiscovery()
-//                            val intent = IntentFilter(BluetoothDevice.ACTION_FOUND)
-//                            registerReceiver(bluetoothBroadcastReceiver, intent)
-//                        }
-//                    }
-//                    else{
-//                        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-//                        startActivity(intent)
-//                        finish()
-//                    }
-//                }
-//            }
-//            else {
-//                mPairedDevices[0] = null
-//            }
-//        }
-//
-//
-//    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -303,25 +216,6 @@ class DeviceList : AppCompatActivity() {
                                 "Please allow all the permissions",
                                 Toast.LENGTH_LONG)
                                 .show()
-                    }
-                }
-            }
-        }
-    }
-
-    private val bluetoothBroadcastReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            if (action == BluetoothDevice.ACTION_FOUND) {
-                val device =
-                    intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                Log.d("DeviceName:", device.name + device.address)
-                if (device.name!=null && device.name.contains(deviceName)){
-                    if(!mBTDevices.contains(device)){
-                        mBTDevices.add(device)
-                        val deviceListAdapter = DeviceListAdapter(context, R.layout.device_list_layout, mBTDevices)
-                        deviceList.adapter = deviceListAdapter
-
                     }
                 }
             }

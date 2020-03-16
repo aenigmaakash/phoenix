@@ -25,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.IOException
 import java.util.*
 
 
@@ -49,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         const val BATTERY_INFORMATION_COMMAND = 0x41
         const val POWER_INFORMATION_COMMAND = 0x42
         const val MODE_INFORMATION_COMMAND = 0x43
+        const val STATUS_FLAG_COMMAND = 0x44
         const val NAME_FLAG_COMMAND = 0x44
         //const val SERIAL_NUMBER_COMMAND =
         const val DEFAULT_NAME_COMMAND = 0x45
@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
         var BLACK = 0
         var bluetoothGattCharacteristic: BluetoothGattCharacteristic? = null
         var batteryGattCharacteristic: BluetoothGattCharacteristic? = null
+        val grayed = 0.5
+        val nonGrayed = 1.0
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,6 +102,7 @@ class MainActivity : AppCompatActivity() {
             bat2.visibility = View.VISIBLE
             delay(500)
             bat3.visibility = View.VISIBLE
+            sNum.text = device.address
         }           //initial battery animation
 
         Refresh().execute()
@@ -108,7 +111,13 @@ class MainActivity : AppCompatActivity() {
                 bluetoothGattCharacteristic!!.value = byteArrayOf(POWER_INFORMATION_COMMAND.toByte())
                 bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
                 pwBtn.isClickable = false
+                pwrbtnoff.alpha = grayed.toFloat()
                 Toast.makeText(this, "Changing...", Toast.LENGTH_SHORT).show()
+                GlobalScope.launch(Dispatchers.Main) {
+                    delay(5000)
+                    pwBtn.isClickable = true
+                    pwrbtnoff.alpha = nonGrayed.toFloat()
+                }
             }
             else
                 Toast.makeText(this@MainActivity, "Connection Lost", Toast.LENGTH_SHORT).show()
@@ -175,7 +184,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         checkUpdate.setOnClickListener {
-
+            Toast.makeText(this, "App upto-date!", Toast.LENGTH_SHORT).show()
         }
 
         logo.setOnClickListener {
@@ -288,7 +297,7 @@ class MainActivity : AppCompatActivity() {
             super.onServicesDiscovered(gatt, status)
             bluetoothGattCharacteristic = gatt!!.getService(serviceUUID)!!.getCharacteristic(characteristicUUID)
             //batteryGattCharacteristic = gatt!!.getService(batteryServiceUUID)!!.getCharacteristic(batteryCharacteristicUUID)
-            bluetoothGattCharacteristic!!.value = byteArrayOf(MODE_INFORMATION_COMMAND.toByte())
+            bluetoothGattCharacteristic!!.value = byteArrayOf(STATUS_FLAG_COMMAND.toByte())
             bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
             bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
         }
@@ -318,7 +327,11 @@ class MainActivity : AppCompatActivity() {
     private fun controlInfo(characteristic: BluetoothGattCharacteristic?){
         when(characteristic?.getStringValue(0)){
             "P" -> {
+                bluetoothGattCharacteristic!!.value = byteArrayOf(MODE_INFORMATION_COMMAND.toByte())
+                bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
                 pwBtn.isClickable = true
+                pwrbtnoff.alpha = nonGrayed.toFloat()
                 pwrbtnoff.visibility = View.INVISIBLE
                 pwrbtnon.visibility = View.VISIBLE
                 standardLayout.visibility = View.VISIBLE
@@ -328,6 +341,7 @@ class MainActivity : AppCompatActivity() {
             }
             "Q" -> {
                 pwBtn.isClickable = true
+                pwrbtnoff.alpha = nonGrayed.toFloat()
                 pwrbtnoff.visibility = View.VISIBLE
                 pwrbtnon.visibility = View.INVISIBLE
                 standardLayout.visibility = View.INVISIBLE
@@ -390,6 +404,24 @@ class MainActivity : AppCompatActivity() {
             }
             "d" -> {
                 batDisplay(0)
+            }
+            "e" -> {
+                pwBtn.isClickable = true
+                pwrbtnoff.visibility = View.INVISIBLE
+                pwrbtnon.visibility = View.VISIBLE
+                standardLayout.visibility = View.VISIBLE
+                boostLayout.visibility = View.VISIBLE
+                hyperboostLayout.visibility = View.VISIBLE
+                driwashLayout.visibility = View.VISIBLE
+            }
+            "f" ->  {
+                stdBtn.isClickable = true
+                pwrbtnoff.visibility = View.VISIBLE
+                pwrbtnon.visibility = View.INVISIBLE
+                standardLayout.visibility = View.INVISIBLE
+                boostLayout.visibility = View.INVISIBLE
+                hyperboostLayout.visibility = View.INVISIBLE
+                driwashLayout.visibility = View.INVISIBLE
             }
         }
     }

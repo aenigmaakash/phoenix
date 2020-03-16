@@ -45,6 +45,7 @@ class DeviceList : AppCompatActivity() {
     var mBTDevices: ArrayList<BluetoothDevice> = ArrayList()
     lateinit var bluetoothLeScanner: BluetoothLeScanner
     private val serviceUUID = "e14d460c-32bc-457e-87f8-b56d1eb24318"
+    private var clickCount = 0
 
 
 
@@ -103,7 +104,15 @@ class DeviceList : AppCompatActivity() {
                 }
                 else if (myBluetooth.isEnabled){
                     GlobalScope.launch(Dispatchers.Main) {
+                        if(clickCount==0){
+                            val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -240f)
+                            val animateScan = ObjectAnimator
+                                .ofPropertyValuesHolder(scanLayout, translateY)
+                            animateScan.duration = 2000
+                            animateScan.start()
+                        }
                         scanLeDevice()
+                        clickCount++
                     }
                 }
             }
@@ -113,11 +122,15 @@ class DeviceList : AppCompatActivity() {
     private fun logoAnimation(){
         val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.5f)
         val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.5f)
-        val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -950f)
+        val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -900f)
 
         val animator = ObjectAnimator.ofPropertyValuesHolder(logoLayout, scaleX, scaleY, translateY)
         animator.duration = 1000
         animator.start()
+        GlobalScope.launch(Dispatchers.Main) {
+            delay(20000)
+            animator.end()
+        }
     }
 
     private fun scanAnimation() {
@@ -132,12 +145,12 @@ class DeviceList : AppCompatActivity() {
             val ellipse2scaleXpos = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.16f)
             val ellipse2scaleYpos = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.16f)
             //val fade = PropertyValuesHolder.ofFloat(View.ALPHA, 1f)
-            val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -300f)
+            //val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -240f)
 
             val animateEllipse1 = ObjectAnimator
                 .ofPropertyValuesHolder(ellipse1Layout, ellipse1scaleXpos, ellipse1scaleYpos)
-            val animateScan = ObjectAnimator
-                .ofPropertyValuesHolder(scanLayout, translateY)
+            //val animateScan = ObjectAnimator
+            //    .ofPropertyValuesHolder(scanLayout, translateY)
             val animateEllipse2 = ObjectAnimator
                 .ofPropertyValuesHolder(ellipse2, ellipse2scaleXpos, ellipse2scaleYpos)
 
@@ -147,7 +160,7 @@ class DeviceList : AppCompatActivity() {
             animateEllipse2.repeatCount = ObjectAnimator.INFINITE
             animateEllipse1.duration = 1000
             animateEllipse2.duration = 1000
-            animateScan.duration = 2000
+           // animateScan.duration = 2000
 
             ellipse1Layout.animation = AnimationUtils.loadAnimation(this@DeviceList, R.anim.fade_in)
             ellipse2.animation = AnimationUtils.loadAnimation(this@DeviceList, R.anim.fade_in)
@@ -155,8 +168,14 @@ class DeviceList : AppCompatActivity() {
             ellipse2.visibility = View.VISIBLE
 
             animateEllipse1.start()
-            animateScan.start()
+            //animateScan.start()
             animateEllipse2.start()
+            GlobalScope.launch(Dispatchers.Main) {
+                delay(20000)
+                animateEllipse1.cancel()
+                animateEllipse2.cancel()
+               // animateScan.end()
+            }
         }
     }
 
@@ -166,6 +185,13 @@ class DeviceList : AppCompatActivity() {
         if (requestCode==1){
             if(resultCode==Activity.RESULT_OK){
                 GlobalScope.launch(Dispatchers.Main){
+                    if(clickCount==0){
+                        val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -240f)
+                        val animateScan = ObjectAnimator
+                            .ofPropertyValuesHolder(scanLayout, translateY)
+                        animateScan.duration = 2000
+                        animateScan.start()
+                    }
                     scanLeDevice()
                 }
             }
@@ -184,6 +210,13 @@ class DeviceList : AppCompatActivity() {
         super.onResume()
         if(myBluetooth.isEnabled && checkGpsStatus())
             GlobalScope.launch(Dispatchers.Main) {
+                if(clickCount == 0){
+                    val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -240f)
+                    val animateScan = ObjectAnimator
+                        .ofPropertyValuesHolder(scanLayout, translateY)
+                    animateScan.duration = 2000
+                    animateScan.start()
+                }
                 scanLeDevice()
             }
     }
@@ -259,8 +292,8 @@ class DeviceList : AppCompatActivity() {
             //Toast.makeText(applicationContext, "onScanResult triggered", Toast.LENGTH_SHORT).show()
             //Log.i("DeviceName:", result?.device?.name.toString())
             if (result!=null){
-                Log.d("DeviceName:", result.device.name + result.device.address)
                 if(!mBTDevices.contains(result.device)){
+                    Log.d("DeviceName:", result.device.name + result.device.address)
                     mBTDevices.add(result.device)
                     val deviceListAdapter = DeviceListAdapter(this@DeviceList, R.layout.device_list_layout, mBTDevices)
                     deviceList.adapter = deviceListAdapter

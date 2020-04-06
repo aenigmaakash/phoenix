@@ -350,11 +350,20 @@ class MainActivity : AppCompatActivity() {
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             super.onServicesDiscovered(gatt, status)
-            bluetoothGattCharacteristic = gatt!!.getService(serviceUUID)!!.getCharacteristic(characteristicUUID)
-            //batteryGattCharacteristic = gatt!!.getService(batteryServiceUUID)!!.getCharacteristic(batteryCharacteristicUUID)
-            bluetoothGattCharacteristic!!.value = byteArrayOf(STATUS_FLAG_COMMAND.toByte())
-            bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
-            bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
+            try {
+                bluetoothGattCharacteristic = gatt!!.getService(serviceUUID)!!.getCharacteristic(characteristicUUID)
+                //batteryGattCharacteristic = gatt!!.getService(batteryServiceUUID)!!.getCharacteristic(batteryCharacteristicUUID)
+                bluetoothGattCharacteristic!!.value = byteArrayOf(STATUS_FLAG_COMMAND.toByte())
+                bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
+            }
+            catch (e: Exception){
+                Log.d("Service Error", e.toString())
+            }
+            finally{
+                connectionState = false
+            }
+
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {

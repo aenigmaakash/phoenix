@@ -68,14 +68,6 @@ class DeviceList : AppCompatActivity() {
 
         deviceList.setOnItemClickListener { parent, view, position, id ->
             //Toast.makeText(this, macId, Toast.LENGTH_SHORT).show()
-            val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            if(vibrate.hasVibrator()){
-                if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
-                    vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
-                }
-                else
-                    vibrate.vibrate(500)
-            }
             bluetoothLeScanner.stopScan(scanCallback)
             bluetoothLeScanner.flushPendingScanResults(scanCallback)
             val intent = Intent(applicationContext, MainActivity::class.java)

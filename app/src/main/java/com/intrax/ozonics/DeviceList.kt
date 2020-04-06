@@ -8,20 +8,16 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.*
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import android.os.Build
-import android.os.Bundle
-import android.os.ParcelUuid
+import android.os.*
 import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.animation.AnimationUtils
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -72,6 +68,14 @@ class DeviceList : AppCompatActivity() {
 
         deviceList.setOnItemClickListener { parent, view, position, id ->
             //Toast.makeText(this, macId, Toast.LENGTH_SHORT).show()
+            val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            if(vibrate.hasVibrator()){
+                if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+                    vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                }
+                else
+                    vibrate.vibrate(500)
+            }
             bluetoothLeScanner.stopScan(scanCallback)
             bluetoothLeScanner.flushPendingScanResults(scanCallback)
             val intent = Intent(applicationContext, MainActivity::class.java)
@@ -115,6 +119,14 @@ class DeviceList : AppCompatActivity() {
                         clickCount++
                     }
                 }
+            }
+            val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            if(vibrate.hasVibrator()){
+                if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+                    vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                }
+                else
+                    vibrate.vibrate(500)
             }
         }
     }

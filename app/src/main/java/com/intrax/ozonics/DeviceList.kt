@@ -42,6 +42,8 @@ class DeviceList : AppCompatActivity() {
     lateinit var bluetoothLeScanner: BluetoothLeScanner
     private val serviceUUID = "e14d460c-32bc-457e-87f8-b56d1eb24318"
     private var clickCount = 0
+    private var mTranslate: Float = 0f
+    private val mThreshold: Float = 300f
 
 
 
@@ -49,7 +51,8 @@ class DeviceList : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device_list)
         firstTime = intent.getBooleanExtra("first_time", true)
-
+        val scale = resources.displayMetrics.density
+        mTranslate = mThreshold * scale + 0.5f
         //ellipse2Layout.visibility = View.INVISIBLE
         scanLayout.visibility = View.INVISIBLE
         select.visibility = View.INVISIBLE
@@ -101,7 +104,7 @@ class DeviceList : AppCompatActivity() {
                 else if (myBluetooth.isEnabled){
                     GlobalScope.launch(Dispatchers.Main) {
                         if(clickCount==0){
-                            val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -240f)
+                            val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -mTranslate + 100f)
                             val animateScan = ObjectAnimator
                                 .ofPropertyValuesHolder(scanLayout, translateY)
                             animateScan.duration = 2000
@@ -126,7 +129,7 @@ class DeviceList : AppCompatActivity() {
     private fun logoAnimation(){
         val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.5f)
         val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.5f)
-        val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -900f)
+        val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -mTranslate)
 
         val animator = ObjectAnimator.ofPropertyValuesHolder(logoLayout, scaleX, scaleY, translateY)
         animator.duration = 1000

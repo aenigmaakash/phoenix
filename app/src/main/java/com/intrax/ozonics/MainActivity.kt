@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
         private val characteristicUUID = UUID.fromString("08b332a8-f4f6-4222-b645-60073ac6823f")
         private val batteryServiceUUID = UUID.fromString("7c29343f-f1c9-4bb0-be5d-e5f8e16cb95c")
         private val batteryCharacteristicUUID = UUID.fromString("6d531619-6ab6-4ab6-ae49-ff00e96d88f4")
-        var btSocket: BluetoothSocket? = null
         lateinit var btAdapter: BluetoothAdapter
         lateinit var bluetoothGatt: BluetoothGatt
         var isConnected:Boolean = false
@@ -284,33 +283,6 @@ class MainActivity : AppCompatActivity() {
                 Log.i("Refresh Task", "Executed after if")
             }
         }
-
-        private fun batDisplay(num: Int){
-            if(num == 0){
-                bat0.visibility = View.VISIBLE
-                bat1.visibility = View.INVISIBLE
-                bat2.visibility = View.INVISIBLE
-                bat3.visibility = View.INVISIBLE
-            }
-            else if(num == 1){
-                bat0.visibility = View.VISIBLE
-                bat1.visibility = View.VISIBLE
-                bat2.visibility = View.INVISIBLE
-                bat3.visibility = View.INVISIBLE
-            }
-            else if(num == 2){
-                bat0.visibility = View.VISIBLE
-                bat1.visibility = View.VISIBLE
-                bat2.visibility = View.VISIBLE
-                bat3.visibility = View.INVISIBLE
-            }
-            else if(num == 3){
-                bat0.visibility = View.VISIBLE
-                bat1.visibility = View.VISIBLE
-                bat2.visibility = View.VISIBLE
-                bat3.visibility = View.VISIBLE
-            }
-        }
     }
 
     private val bluetoothGattCallback = object : BluetoothGattCallback() {
@@ -491,29 +463,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun batDisplay(num: Int){
-        if(num == 0){
-            bat0.visibility = View.VISIBLE
-            bat1.visibility = View.INVISIBLE
-            bat2.visibility = View.INVISIBLE
-            bat3.visibility = View.INVISIBLE
-        }
-        else if(num == 1){
-            bat0.visibility = View.VISIBLE
-            bat1.visibility = View.VISIBLE
-            bat2.visibility = View.INVISIBLE
-            bat3.visibility = View.INVISIBLE
-        }
-        else if(num == 2){
-            bat0.visibility = View.VISIBLE
-            bat1.visibility = View.VISIBLE
-            bat2.visibility = View.VISIBLE
-            bat3.visibility = View.INVISIBLE
-        }
-        else if(num == 3){
-            bat0.visibility = View.VISIBLE
-            bat1.visibility = View.VISIBLE
-            bat2.visibility = View.VISIBLE
-            bat3.visibility = View.VISIBLE
+        when (num) {
+            0 -> {
+                bat0.visibility = View.VISIBLE
+                bat1.visibility = View.INVISIBLE
+                bat2.visibility = View.INVISIBLE
+                bat3.visibility = View.INVISIBLE
+            }
+            1 -> {
+                bat0.visibility = View.VISIBLE
+                bat1.visibility = View.VISIBLE
+                bat2.visibility = View.INVISIBLE
+                bat3.visibility = View.INVISIBLE
+            }
+            2 -> {
+                bat0.visibility = View.VISIBLE
+                bat1.visibility = View.VISIBLE
+                bat2.visibility = View.VISIBLE
+                bat3.visibility = View.INVISIBLE
+            }
+            3 -> {
+                bat0.visibility = View.VISIBLE
+                bat1.visibility = View.VISIBLE
+                bat2.visibility = View.VISIBLE
+                bat3.visibility = View.VISIBLE
+            }
         }
     }
 }

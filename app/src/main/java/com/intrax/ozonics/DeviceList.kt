@@ -11,6 +11,7 @@ import android.bluetooth.le.*
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.*
@@ -23,6 +24,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
+import com.google.android.gms.tasks.Task
 import kotlinx.android.synthetic.main.activity_device_list.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -34,16 +38,20 @@ import kotlin.collections.ArrayList
 
 class DeviceList : AppCompatActivity() {
 
-    private val mPairedDevices = arrayOfNulls<BluetoothDevice>(50)
-    lateinit var myBluetooth: BluetoothAdapter
-    private val deviceName = "Phoenix"
-    private var firstTime: Boolean = true
-    var mBTDevices: ArrayList<BluetoothDevice> = ArrayList()
-    lateinit var bluetoothLeScanner: BluetoothLeScanner
-    private val serviceUUID = "e14d460c-32bc-457e-87f8-b56d1eb24318"
-    private var clickCount = 0
-    private var mTranslate: Float = 0f
-    private val mThreshold: Float = 300f
+    companion object{
+        lateinit var myBluetooth: BluetoothAdapter
+        private val deviceName = "Phoenix"
+        private var firstTime: Boolean = true
+        var mBTDevices: ArrayList<BluetoothDevice> = ArrayList()
+        lateinit var bluetoothLeScanner: BluetoothLeScanner
+        private val serviceUUID = "e14d460c-32bc-457e-87f8-b56d1eb24318"
+        private var clickCount = 0
+        private var mTranslate: Float = 0f
+        private val mThreshold: Float = 300f
+        private lateinit var fusedLocationClient: FusedLocationProviderClient
+        private lateinit var locationCallback: LocationCallback
+        private lateinit var finalLocation: LocationServices
+    }
 
 
 
@@ -64,6 +72,9 @@ class DeviceList : AppCompatActivity() {
             scanLayout.visibility = View.VISIBLE
         }
 
+        createLocationCallback()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
         val myBluetoothManager =
             getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         myBluetooth = myBluetoothManager.adapter
@@ -75,6 +86,7 @@ class DeviceList : AppCompatActivity() {
             bluetoothLeScanner.flushPendingScanResults(scanCallback)
             val intent = Intent(applicationContext, MainActivity::class.java)
             intent.putExtra("Device", mBTDevices[position])
+
             startActivity(intent)
             finish()
         }
@@ -82,12 +94,10 @@ class DeviceList : AppCompatActivity() {
         scan.setOnClickListener {
             if(!checkGpsStatus()){
                 val dialogBuilder = AlertDialog.Builder(this)
-                dialogBuilder.setMessage("Location must be enabled, please turn it on")
+                dialogBuilder.setMessage("Location Services is required to search for devices...")
                     .setCancelable(false)
-                    .setPositiveButton("Enable", DialogInterface.OnClickListener { dialog, _ ->
-                        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                        startActivity(intent)
-                        finish()
+                    .setPositiveButton("Enable", DialogInterface.OnClickListener { _, _ ->
+                        requestLocation()
                     })
                     .setNegativeButton("Cancel", DialogInterface.OnClickListener { dialog, _ ->
                         dialog.cancel()
@@ -103,7 +113,7 @@ class DeviceList : AppCompatActivity() {
                 }
                 else if (myBluetooth.isEnabled){
                     GlobalScope.launch(Dispatchers.Main) {
-                        if(clickCount==0){
+                        if(clickCount == 0){
                             val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -mTranslate + 100f)
                             val animateScan = ObjectAnimator
                                 .ofPropertyValuesHolder(scanLayout, translateY)
@@ -189,10 +199,10 @@ class DeviceList : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode==1){
-            if(resultCode==Activity.RESULT_OK){
+        if (requestCode == 1){
+            if(resultCode == Activity.RESULT_OK){
                 GlobalScope.launch(Dispatchers.Main){
-                    if(clickCount==0){
+                    if(clickCount == 0){
                         val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -240f)
                         val animateScan = ObjectAnimator
                             .ofPropertyValuesHolder(scanLayout, translateY)
@@ -206,11 +216,37 @@ class DeviceList : AppCompatActivity() {
                 Toast.makeText(this, "Bluetooth is not enabled.\nPlease enable in settings!", Toast.LENGTH_LONG).show()
             }
         }
+        else if (requestCode == 101){
+            when(resultCode){
+                Activity.RESULT_OK -> {
+                    if (!myBluetooth.isEnabled) {
+                        val turnBTon = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                        startActivityForResult(turnBTon, 1)
+                    }
+                    else if (myBluetooth.isEnabled){
+                        GlobalScope.launch(Dispatchers.Main) {
+                            if(clickCount == 0){
+                                val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, -mTranslate + 100f)
+                                val animateScan = ObjectAnimator
+                                    .ofPropertyValuesHolder(scanLayout, translateY)
+                                animateScan.duration = 2000
+                                animateScan.start()
+                            }
+                            scanLeDevice()
+                        }
+                    }
+                }
+                Activity.RESULT_CANCELED -> {
+                    Toast.makeText(this, "Please enable location to get weather info", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         bluetoothLeScanner.stopScan(scanCallback)//unregisterReceiver(bluetoothBroadcastReceiver)
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     override fun onResume() {
@@ -226,6 +262,12 @@ class DeviceList : AppCompatActivity() {
                 }
                 scanLeDevice()
             }
+        createLocationCallback()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     private fun checkBTPermissions() {
@@ -319,5 +361,42 @@ class DeviceList : AppCompatActivity() {
         }
     }
 
+    private fun requestLocation(){
+        val mLocationRequestHighAccuracy = LocationRequest.create()
+            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+            .setInterval(10000)
 
+        val builder = LocationSettingsRequest.Builder()
+            .addLocationRequest(mLocationRequestHighAccuracy)
+        val client: SettingsClient = LocationServices.getSettingsClient(this)
+        val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            Log.i("Location settings", "All settings satisfied")
+            fusedLocationClient.requestLocationUpdates(mLocationRequestHighAccuracy, locationCallback, Looper.myLooper())
+        }
+
+        task.addOnFailureListener {
+            if(it is ResolvableApiException){
+                try {
+                    it.startResolutionForResult(this, 101)
+                }
+                catch (sendEx: IntentSender.SendIntentException){
+                    Log.i("Location Settings", "Error in changing settings")
+                }
+            }
+        }
+    }
+
+    private fun createLocationCallback() {
+        locationCallback = object: LocationCallback() {
+            override fun onLocationResult(location: LocationResult?) {
+                super.onLocationResult(location)
+                if(location!=null){
+                    fusedLocationClient.removeLocationUpdates(locationCallback)
+                }
+            }
+        }
+    }
 }
+

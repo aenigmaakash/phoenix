@@ -1,15 +1,23 @@
 package com.intrax.ozonics
 
-import android.app.ProgressDialog
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.*
 import android.content.Context
 import android.content.Intent
+import android.content.IntentSender
 import android.graphics.Color
+import android.location.Location
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.*
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
+import com.google.android.gms.tasks.Task
 import kotlinx.android.synthetic.main.activity_test.*
 import kotlinx.android.synthetic.main.activity_test.bat0
 import kotlinx.android.synthetic.main.activity_test.bat1
@@ -24,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -36,9 +45,6 @@ class MainActivity : AppCompatActivity() {
         private val batteryCharacteristicUUID = UUID.fromString("6d531619-6ab6-4ab6-ae49-ff00e96d88f4")
         lateinit var btAdapter: BluetoothAdapter
         lateinit var bluetoothGatt: BluetoothGatt
-        var isConnected:Boolean = false
-        lateinit var address: String
-        lateinit var progressDialog: ProgressDialog
         const val STANDARD_MODE_COMMAND = 0x30
         const val BOOST_MODE_COMMAND = 0x31
         const val HYPERBOOST_MODE_COMMAND = 0x32
@@ -51,15 +57,21 @@ class MainActivity : AppCompatActivity() {
         //const val SERIAL_NUMBER_COMMAND =
         const val DEFAULT_NAME_COMMAND = 0x45
         const val SET_NAME_COMMAND = 0x46
-        val firstTimeFlagforApp = true
         var unitName:String = "Ozonics"
         var connectionState = false
         var WHITE = 0
         var BLACK = 0
         var bluetoothGattCharacteristic: BluetoothGattCharacteristic? = null
         var batteryGattCharacteristic: BluetoothGattCharacteristic? = null
-        val grayed = 0.5
-        val nonGrayed = 1.0
+        const val grayed = 0.5
+        const val nonGrayed = 1.0
+        private lateinit var fusedLocationClient: FusedLocationProviderClient
+        private lateinit var locationCallback: LocationCallback
+        var tempUnits = " \u2109"
+        var windUnits = " mi/h"
+        var units: Boolean = true
+        private var finalLocation: Location? = null
+        private var backNavigation = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,13 +85,23 @@ class MainActivity : AppCompatActivity() {
         WHITE = Color.parseColor("#FFFFFF")
         BLACK = Color.parseColor("#000000")
 
+        val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
+        units = sharedPref.getBoolean("units", true)
+        if(!units){
+            tempUnits = " \u2103"
+            windUnits = " m/s"
+        }
+        unitsBtn.isChecked = !units
+        unitsBtn.textOff = "\u2109"
+        unitsBtn.textOn = "\u2103"
+
         bat0.visibility = View.INVISIBLE
         bat1.visibility = View.INVISIBLE
         bat2.visibility = View.INVISIBLE
         bat3.visibility = View.INVISIBLE
 
-        pwrbtnon.visibility = View.INVISIBLE
         pwrbtnoff.visibility = View.VISIBLE
+        pwrbtnon.visibility = View.INVISIBLE
         settings_pressed.visibility = View.INVISIBLE
         info_pressed.visibility = View.INVISIBLE
         controlLayout.visibility = View.INVISIBLE
@@ -91,6 +113,14 @@ class MainActivity : AppCompatActivity() {
         boostLayout.visibility = View.INVISIBLE
         driwashLayout.visibility = View.INVISIBLE
         hyperboostLayout.visibility = View.INVISIBLE
+
+        if(!isOnline(this))
+            cityText.text = "Internet Connectivity Required"
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        createLocationCallback()
+        requestLocation()
+
 
         GlobalScope.launch(Dispatchers.Main) {
             bat0.visibility = View.VISIBLE
@@ -202,6 +232,7 @@ class MainActivity : AppCompatActivity() {
                 delay(500)
                 settings_pressed.visibility = View.INVISIBLE
             }
+            backNavigation = true
         }
 
         info.setOnClickListener {
@@ -213,6 +244,7 @@ class MainActivity : AppCompatActivity() {
                 delay(500)
                 info_pressed.visibility = View.INVISIBLE
             }
+            backNavigation = true
         }
 
         scanDevice.setOnClickListener {
@@ -229,6 +261,75 @@ class MainActivity : AppCompatActivity() {
             controlLayout.visibility = View.VISIBLE
             infoLayout.visibility = View.INVISIBLE
             settingsLayout.visibility = View.INVISIBLE
+            backNavigation = false
+        }
+
+        unitsBtn.setOnCheckedChangeListener { _, isChecked ->
+            if(isOnline(this)){
+                if(isChecked){
+                    tempText.text = ""
+                    windText.text = ""
+                    humidityText.text = ""
+                    cityText.text = "Loading.."
+                    sunriseText.text = ""
+                    sunsetText.text = ""
+                    tempUnits = " \u2103"
+                    windUnits = " m/s"
+                    units = false
+                    with (sharedPref.edit()){
+                        putBoolean("units", units)
+                        commit()
+                    }
+                    if(finalLocation!=null)
+                        weatherUpdateTask().execute(finalLocation)
+                    else
+                        requestLocation()
+                    //Log.i("Units Value", units.toString())
+                }
+                else{
+                    tempText.text = ""
+                    windText.text = ""
+                    humidityText.text = ""
+                    cityText.text = "Loading.."
+                    sunriseText.text = ""
+                    sunsetText.text = ""
+                    tempUnits = " \u2109"
+                    windUnits = " mi/h"
+                    units = true
+                    with (sharedPref.edit()){
+                        putBoolean("units", units)
+                        commit()
+                    }
+                    if(finalLocation!=null)
+                        weatherUpdateTask().execute(finalLocation)
+                    else
+                        requestLocation()
+                    //Log.i("Units Value", units.toString())
+                }
+            }
+            else{
+                tempText.text = ""
+                windText.text = ""
+                humidityText.text = ""
+                cityText.text = "Internet Connectivity Required"
+                sunriseText.text = ""
+                sunsetText.text = ""
+            }
+
+        }
+    }
+
+    override fun onBackPressed() {
+
+        if(!backNavigation){
+            super.onBackPressed()
+
+        }
+        else{
+            controlLayout.visibility = View.VISIBLE
+            infoLayout.visibility = View.INVISIBLE
+            settingsLayout.visibility = View.INVISIBLE
+            backNavigation = false
         }
     }
 
@@ -240,6 +341,7 @@ class MainActivity : AppCompatActivity() {
 
         }
         bluetoothGatt.disconnect()
+        fusedLocationClient.removeLocationUpdates(locationCallback)
         //disconnect()
     }
 
@@ -247,11 +349,33 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         if(connectionState)
         bluetoothGatt.disconnect()//disconnect()
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     override fun onResume() {
         super.onResume()
         bluetoothGatt.connect()//ConnectBT(this).execute()
+        createLocationCallback()
+        if(finalLocation!=null)
+            weatherUpdateTask().execute(finalLocation)
+        else
+            requestLocation()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when(requestCode) {
+            101 -> {
+                when(resultCode){
+                    Activity.RESULT_OK -> {
+                        requestLocation()
+                    }
+                    Activity.RESULT_CANCELED -> {
+                        Toast.makeText(this, "Please enable location to get weather info", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
     }
 
 
@@ -274,14 +398,20 @@ class MainActivity : AppCompatActivity() {
 
         override fun onPostExecute(result: Boolean?) {
             super.onPostExecute(result)
-            Log.i("Refresh Task", "Executed before if")
-            if (connectionState) {
-                bluetoothGattCharacteristic!!.value = byteArrayOf(BATTERY_INFORMATION_COMMAND.toByte())
-                bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
-                bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
+            //Log.i("Refresh Task", "Executed before if")
+            try {
+                if (connectionState) {
+                    bluetoothGattCharacteristic!!.value = byteArrayOf(BATTERY_INFORMATION_COMMAND.toByte())
+                    bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                    bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
 
-                Log.i("Refresh Task", "Executed after if")
+                    //Log.i("Refresh Task", "Executed after if")
+                }
             }
+            catch (e: java.lang.Exception){
+                e.printStackTrace()
+            }
+
         }
     }
 
@@ -489,5 +619,99 @@ class MainActivity : AppCompatActivity() {
                 bat3.visibility = View.VISIBLE
             }
         }
+    }
+
+    private fun isOnline(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (connectivityManager != null) {
+            val capabilities =
+                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            if (capabilities != null) {
+                when {
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
+                        Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+                        return true
+                    }
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
+                        Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+                        return true
+                    }
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> {
+                        Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+    private fun requestLocation(){
+        val mLocationRequestLowPower = LocationRequest.create()
+            .setPriority(LocationRequest.PRIORITY_LOW_POWER)
+            .setInterval(20000)
+
+        val builder = LocationSettingsRequest.Builder()
+            .addLocationRequest(mLocationRequestLowPower)
+        val client: SettingsClient = LocationServices.getSettingsClient(this)
+        val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            Log.i("Location settings", "All settings satisfied")
+            fusedLocationClient.requestLocationUpdates(mLocationRequestLowPower, locationCallback, Looper.myLooper())
+        }
+
+        task.addOnFailureListener {
+            if(it is ResolvableApiException){
+                try {
+                    it.startResolutionForResult(this, 101)
+                }
+                catch (sendEx: IntentSender.SendIntentException){
+                    Log.i("Location Settings", "Error in changing settings")
+                }
+            }
+        }
+    }
+
+    private fun createLocationCallback() {
+        locationCallback = object: LocationCallback() {
+            override fun onLocationResult(location: LocationResult?) {
+                super.onLocationResult(location)
+                if(location!=null){
+                    finalLocation = location.lastLocation
+                    weatherUpdateTask().execute(location.lastLocation)
+                }
+            }
+        }
+    }
+
+    inner class weatherUpdateTask(): AsyncTask<Location, Void, WeatherClient>() {
+
+        override fun doInBackground(vararg params: Location): WeatherClient {
+            val weatherClient = WeatherClient()
+            weatherClient.updateWeatherData(params[0], units)
+            return weatherClient
+        }
+
+        @SuppressLint("SetTextI18n")
+        override fun onPostExecute(weatherClient: WeatherClient) {
+            //Log.i("Temp", weatherClient.temp)
+            tempText.text = "Temperature: " + weatherClient.temp + tempUnits
+            windText.text = "Wind: " + weatherClient.wind + windUnits
+            humidityText.text = "Humidity: "+ weatherClient.humidity + " %"
+            cityText.text = "City: " + weatherClient.cityName + ", " + weatherClient.cityCountry
+            sunriseText.text = "Sunrise: " + setTime(weatherClient.sunRise).toString()
+            sunsetText.text = "Sunset: " + setTime(weatherClient.sunSet).toString()
+        }
+    }
+
+    private fun setTime(time: String?): String? {
+        if(time == null)
+            return null
+        val date = Date((time.toLong())*1000L)
+        val sdf = SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z")
+        sdf.timeZone = TimeZone.getDefault()
+        return sdf.format(date)
     }
 }

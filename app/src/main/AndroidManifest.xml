@@ -19,9 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"
         android:usesCleartextTraffic="true">
-        <activity android:name=".WeatherTest">
 
-        </activity>
         <activity
             android:name=".SplashScreenActivity"
             android:screenOrientation="portrait"

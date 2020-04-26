@@ -340,7 +340,7 @@ class MainActivity : AppCompatActivity() {
             bluetoothGatt.close()
 
         }
-        bluetoothGatt.disconnect()
+        //bluetoothGatt.disconnect()
         fusedLocationClient.removeLocationUpdates(locationCallback)
         //disconnect()
     }
@@ -348,7 +348,7 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         if(connectionState)
-        bluetoothGatt.disconnect()//disconnect()
+            bluetoothGatt.disconnect()//disconnect()
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
@@ -432,6 +432,7 @@ class MainActivity : AppCompatActivity() {
                             vibrate.vibrate(300)
                     }
                     Log.w("Connection Status", "Disconnected")
+                    Toast.makeText(applicationContext, "Disconnected", Toast.LENGTH_SHORT).show()
                 }
                 BluetoothGatt.STATE_CONNECTED -> GlobalScope.launch(Dispatchers.Main) {
                     connectionState = true
@@ -446,6 +447,7 @@ class MainActivity : AppCompatActivity() {
                             vibrate.vibrate(1000)
                     }
                     Log.w("Connection Status", "Connected")
+                    Toast.makeText(applicationContext, "Connected", Toast.LENGTH_SHORT).show()
                 }
             }
         }

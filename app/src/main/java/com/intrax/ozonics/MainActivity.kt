@@ -135,24 +135,30 @@ class MainActivity : AppCompatActivity() {
 
         Refresh().execute()
         pwBtn.setOnClickListener {
+            Log.i("connection state", connectionState.toString())
             if(connectionState){
-                bluetoothGattCharacteristic!!.value = byteArrayOf(POWER_INFORMATION_COMMAND.toByte())
-                bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
-                pwBtn.isClickable = false
-                pwrbtnoff.alpha = grayed.toFloat()
-                val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if(vibrate.hasVibrator()){
-                    if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
-                        vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                try {
+                    bluetoothGattCharacteristic!!.value = byteArrayOf(POWER_INFORMATION_COMMAND.toByte())
+                    bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                    pwBtn.isClickable = false
+                    pwrbtnoff.alpha = grayed.toFloat()
+                    val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                    if(vibrate.hasVibrator()){
+                        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+                            vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                        }
+                        else
+                            vibrate.vibrate(500)
                     }
-                    else
-                        vibrate.vibrate(500)
+                    //Toast.makeText(this, "Changing...", Toast.LENGTH_SHORT).show()
+                    GlobalScope.launch(Dispatchers.Main) {
+                        delay(5000)
+                        pwBtn.isClickable = true
+                        pwrbtnoff.alpha = nonGrayed.toFloat()
+                    }
                 }
-                //Toast.makeText(this, "Changing...", Toast.LENGTH_SHORT).show()
-                GlobalScope.launch(Dispatchers.Main) {
-                    delay(5000)
-                    pwBtn.isClickable = true
-                    pwrbtnoff.alpha = nonGrayed.toFloat()
+                catch (e: Exception){
+                    e.printStackTrace()
                 }
             }
             else
@@ -161,64 +167,84 @@ class MainActivity : AppCompatActivity() {
 
         stdBtn.setOnClickListener {
             if(connectionState){
-                bluetoothGattCharacteristic!!.value = byteArrayOf(STANDARD_MODE_COMMAND.toByte())
-                bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
-                stdBtn.isClickable = false
-                val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if(vibrate.hasVibrator()){
-                    if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
-                        vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                try {
+                    bluetoothGattCharacteristic!!.value = byteArrayOf(STANDARD_MODE_COMMAND.toByte())
+                    bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                    stdBtn.isClickable = false
+                    val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                    if(vibrate.hasVibrator()){
+                        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+                            vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                        }
+                        else
+                            vibrate.vibrate(500)
                     }
-                    else
-                        vibrate.vibrate(500)
+                }
+                catch (e: Exception){
+                    e.printStackTrace()
                 }
             }
         }
 
         boostBtn.setOnClickListener {
             if(connectionState){
-                bluetoothGattCharacteristic!!.value = byteArrayOf(BOOST_MODE_COMMAND.toByte())
-                bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
-                boostBtn.isClickable = false
-                val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if(vibrate.hasVibrator()){
-                    if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
-                        vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                try {
+                    bluetoothGattCharacteristic!!.value = byteArrayOf(BOOST_MODE_COMMAND.toByte())
+                    bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                    boostBtn.isClickable = false
+                    val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                    if(vibrate.hasVibrator()){
+                        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+                            vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                        }
+                        else
+                            vibrate.vibrate(500)
                     }
-                    else
-                        vibrate.vibrate(500)
+                }
+                catch (e: Exception){
+                    e.printStackTrace()
                 }
             }
         }
 
         hyBoostBtn.setOnClickListener {
             if(connectionState){
-                bluetoothGattCharacteristic!!.value = byteArrayOf(HYPERBOOST_MODE_COMMAND.toByte())
-                bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
-                hyBoostBtn.isClickable = false
-                val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if(vibrate.hasVibrator()){
-                    if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
-                        vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                try {
+                    bluetoothGattCharacteristic!!.value = byteArrayOf(HYPERBOOST_MODE_COMMAND.toByte())
+                    bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                    hyBoostBtn.isClickable = false
+                    val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                    if(vibrate.hasVibrator()){
+                        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+                            vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                        }
+                        else
+                            vibrate.vibrate(500)
                     }
-                    else
-                        vibrate.vibrate(500)
+                }
+                catch (e: Exception){
+                    e.printStackTrace()
                 }
             }
         }
 
         driBtn.setOnClickListener {
             if(connectionState){
-                bluetoothGattCharacteristic!!.value = byteArrayOf(DRIWASH_MODE_COMMAND.toByte())
-                bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
-                driBtn.isClickable = false
-                val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if(vibrate.hasVibrator()){
-                    if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
-                        vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                try {
+                    bluetoothGattCharacteristic!!.value = byteArrayOf(DRIWASH_MODE_COMMAND.toByte())
+                    bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
+                    driBtn.isClickable = false
+                    val vibrate = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                    if(vibrate.hasVibrator()){
+                        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+                            vibrate.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+                        }
+                        else
+                            vibrate.vibrate(500)
                     }
-                    else
-                        vibrate.vibrate(500)
+                }
+                catch (e: Exception){
+                    e.printStackTrace()
                 }
             }
         }
@@ -254,7 +280,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         checkUpdate.setOnClickListener {
-            Toast.makeText(this, "App upto-date!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "App upto date!", Toast.LENGTH_SHORT).show()
         }
 
         logo.setOnClickListener {
@@ -384,11 +410,7 @@ class MainActivity : AppCompatActivity() {
      */
     inner class Refresh() : AsyncTask<Void, Void, Boolean>() {
 
-        override fun onPreExecute() {
-            super.onPreExecute()
-            //Toast.makeText(context, "Device Connected", Toast.LENGTH_SHORT).show()
-        }
-
+        //No need of onPreExecuted here, nothing to do
         override fun doInBackground(vararg params: Void?): Boolean? {
             Thread.sleep(1000)
             while(!connectionState && batteryGattCharacteristic!=null && bluetoothGattCharacteristic!=null);
@@ -398,20 +420,16 @@ class MainActivity : AppCompatActivity() {
 
         override fun onPostExecute(result: Boolean?) {
             super.onPostExecute(result)
-            //Log.i("Refresh Task", "Executed before if")
-            try {
-                if (connectionState) {
+            if(connectionState){
+                try {
                     bluetoothGattCharacteristic!!.value = byteArrayOf(BATTERY_INFORMATION_COMMAND.toByte())
                     bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic)
                     bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
-
-                    //Log.i("Refresh Task", "Executed after if")
+                }
+                catch (e: Exception){
+                    e.printStackTrace()
                 }
             }
-            catch (e: java.lang.Exception){
-                e.printStackTrace()
-            }
-
         }
     }
 
@@ -431,7 +449,7 @@ class MainActivity : AppCompatActivity() {
                         else
                             vibrate.vibrate(300)
                     }
-                    Log.w("Connection Status", "Disconnected")
+                    Log.w("Connection Status", connectionState.toString())
                     Toast.makeText(applicationContext, "Disconnected", Toast.LENGTH_SHORT).show()
                 }
                 BluetoothGatt.STATE_CONNECTED -> GlobalScope.launch(Dispatchers.Main) {
@@ -446,7 +464,7 @@ class MainActivity : AppCompatActivity() {
                         else
                             vibrate.vibrate(1000)
                     }
-                    Log.w("Connection Status", "Connected")
+                    Log.w("Connection Status", connectionState.toString())
                     Toast.makeText(applicationContext, "Connected", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -462,12 +480,8 @@ class MainActivity : AppCompatActivity() {
                 bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)
             }
             catch (e: Exception){
-                Log.d("Service Error", e.toString())
+                e.printStackTrace()
             }
-            finally{
-                connectionState = false
-            }
-
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
